@@ -1,0 +1,776 @@
+{
+  "name": "Scheduled Automatic News Anchor",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Read from link and summarize each news articles in 50 words in emoji styled manner\nPlease output the JSON text from parser with each property on a new line for readability.\n\nNews results and links:\nTopics:{{ $json.Topic }},\n1)news{{ $json['1)News'] }}\n1)link{{ $json['1)link'] }}\n\n2)news{{ $json['2)News'] }}\n2)link{{ $json['2)link'] }}\n\n\n3)news:{{ $json['3)News'] }}\n3)link:{{ $json['3)link'] }}\n\n4)news:{{ $json['4)News'] }}\n4)link:{{ $json['4)link'] }}\n\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "batching": {
+            "batchSize": 2
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        -180
+      ],
+      "id": "e9a21f96-b7a7-44ed-981e-4d7f39f06449",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "no_cache": false,
+          "google_domain": "google.com"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        60
+      ],
+      "id": "473d2005-7fb2-4d97-bf33-946b57466a00",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "rwyLuXVVx6M7DqTU",
+          "name": "SerpApi account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
+        "guildId": {
+          "__rl": true,
+          "value": "1385647845943804024",
+          "mode": "list",
+          "cachedResultName": "Harsh Pawar's server",
+          "cachedResultUrl": "https://discord.com/channels/1385647845943804024"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1387018000992829440",
+          "mode": "list",
+          "cachedResultName": "general",
+          "cachedResultUrl": "https://discord.com/channels/1385647845943804024/1387018000992829440"
+        },
+        "message": "={{ $json.text }}",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Which type of news?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "World news"
+                  },
+                  {
+                    "option": "USA"
+                  }
+                ]
+              },
+              "multiselect": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -180
+      ],
+      "id": "c11addc3-4b6d-43f0-acb3-a6f7a685a083",
+      "name": "Discord",
+      "webhookId": "7fd14e29-e4ce-4519-8b6f-58c50d400192",
+      "credentials": {
+        "discordBotApi": {
+          "id": "YWq5Acox9mJX9981",
+          "name": "Discord Bot account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "instructions": "Transform data from discord options to agentic ai data\nso that it operates on whichever feedback is active\n data['Which type of news?']",
+        "codeGeneratedForPrompt": "Transform data from discord options to agentic ai data\nso that it operates on whichever feedback is active\n data['Which type of news?']",
+        "jsCode": "const items = $input.all();\nconst transformedItems = items.map((item) => {\n  const newsType = item?.json?.data[\"Which type of news?\"];\n  item.json.feedback = newsType;\n  return item;\n});\nreturn transformedItems;\n"
+      },
+      "type": "n8n-nodes-base.aiTransform",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        40
+      ],
+      "id": "83eccdcf-ce6e-4698-83ab-a70fa438a5a3",
+      "name": "AI Transform"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search?engine=google_news",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_news"
+            },
+            {
+              "name": "api_key",
+              "value": "7246ab98e92b02d3337b5b6b1ec57254224f3eb2d69d300b78310349d6f9ca80"
+            },
+            {
+              "name": "num",
+              "value": "1"
+            },
+            {
+              "name": "q",
+              "value": "world news"
+            },
+            {
+              "name": "as_dt",
+              "value": "r"
+            },
+            {
+              "name": "as_sitesearch",
+              "value": "=domain.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1380,
+        -320
+      ],
+      "id": "0c77c770-d192-45f3-a820-136dc9bcc1cd",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00c9a48d-6772-479e-bc15-062d9d8056da",
+              "name": "Topic",
+              "value": "={{ $json.search_parameters.q }}",
+              "type": "string"
+            },
+            {
+              "id": "3de4f798-5b3c-4388-a7c8-f27595d922a9",
+              "name": "=1)News",
+              "value": "={{ $json.news_results[0].title }}",
+              "type": "string"
+            },
+            {
+              "id": "1688728a-0fd8-427f-9042-24d0765ca265",
+              "name": "1)link",
+              "value": "={{ $json.news_results[0].link }}",
+              "type": "string"
+            },
+            {
+              "id": "85144b9c-7172-4218-b032-fdeaa05829ea",
+              "name": "2)News",
+              "value": "={{ $json.news_results[1].title }}",
+              "type": "string"
+            },
+            {
+              "id": "90d0f7e9-b612-47fd-a63e-fcf246535878",
+              "name": "2)link",
+              "value": "={{ $json.news_results[1].link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        -500
+      ],
+      "id": "c32e5fad-304e-4e7d-a3a5-0674dc2438b1",
+      "name": "Edit Fields1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search?engine=google_news",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_news"
+            },
+            {
+              "name": "api_key",
+              "value": "7246ab98e92b02d3337b5b6b1ec57254224f3eb2d69d300b78310349d6f9ca80"
+            },
+            {
+              "name": "num",
+              "value": "1"
+            },
+            {
+              "name": "q",
+              "value": "USA"
+            },
+            {
+              "name": "as_dt",
+              "value": "r"
+            },
+            {
+              "name": "as_sitesearch",
+              "value": "=domain.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1380,
+        -500
+      ],
+      "id": "939cb47a-2cfb-4c7c-81f8-215ddbd65b71",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1680,
+        -420
+      ],
+      "id": "73e4a550-dd89-47e5-85be-be95ca80a3d5",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search?engine=google_news",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_news"
+            },
+            {
+              "name": "api_key",
+              "value": "7246ab98e92b02d3337b5b6b1ec57254224f3eb2d69d300b78310349d6f9ca80"
+            },
+            {
+              "name": "num",
+              "value": "1"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.data['Which type of news?'] }}"
+            },
+            {
+              "name": "as_dt",
+              "value": "r"
+            },
+            {
+              "name": "as_sitesearch",
+              "value": "=domain.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1380,
+        -140
+      ],
+      "id": "51b1864c-1091-4a7a-9aae-97b74ea626cf",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": "mindcraft-gpt4o",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        60
+      ],
+      "id": "97d5cf62-2dc5-4687-b95f-ce2947df621b",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "nNZFxbQfaVaEls4c",
+          "name": "Azure Open AI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"news_items\": [\n    {\n      \"position\": 1,\n      \"headline\": \"USA attacks Iran\",\n      \"link\": \"https://jbkcnsnclm.com\",\n      \"summary\": \"🇺🇸 The US has launched targeted airstrikes in Iran, escalating tensions and prompting global concern. Diplomats urge de-escalation.\"\n    },\n    {\n      \"position\": 2,\n      \"headline\": \"Global warming\",\n      \"link\": \"https://bbc.com\",\n      \"summary\": \"🌡️ Global temperatures are rising at record rates, causing massive polar ice melt and sea level threats across continents.\"\n    },\n    {\n      \"position\": 3,\n      \"headline\": \"New innovation in medical field\",\n      \"link\": \"https://nytimes.com\",\n      \"summary\": \"🧬 Researchers in the US have developed a new cancer treatment method that shows promising results in patient recovery.\"\n    },\n    {\n      \"position\": 4,\n      \"headline\": \"Today the stock market crashes\",\n      \"link\": \"https://globaltimes.com\",\n      \"summary\": \"📉 Major global indices fell sharply today as US-China tensions reignited fears of economic slowdown and market instability.\"\n    }\n  ]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -680,
+        60
+      ],
+      "id": "ae8df5d5-fdb9-4fda-a001-6d64137afdda",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00c9a48d-6772-479e-bc15-062d9d8056da",
+              "name": "Topic2",
+              "value": "={{ $json.search_parameters.q }}",
+              "type": "string"
+            },
+            {
+              "id": "3de4f798-5b3c-4388-a7c8-f27595d922a9",
+              "name": "=3)News",
+              "value": "={{ $json.news_results[0].title }}",
+              "type": "string"
+            },
+            {
+              "id": "1688728a-0fd8-427f-9042-24d0765ca265",
+              "name": "3)link",
+              "value": "={{ $json.news_results[0].link }}",
+              "type": "string"
+            },
+            {
+              "id": "85144b9c-7172-4218-b032-fdeaa05829ea",
+              "name": "4)News",
+              "value": "={{ $json.news_results[1].title }}",
+              "type": "string"
+            },
+            {
+              "id": "90d0f7e9-b612-47fd-a63e-fcf246535878",
+              "name": "4)link",
+              "value": "={{ $json.news_results[1].link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        -320
+      ],
+      "id": "8aab716a-e106-4f75-99ee-9e0d9512e71d",
+      "name": "Edit Fields",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -880,
+        -420
+      ],
+      "id": "5c585eba-d289-43ee-93d1-734ff771ea30",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00c9a48d-6772-479e-bc15-062d9d8056da",
+              "name": "Topic",
+              "value": "={{ $json.search_parameters.q }}",
+              "type": "string"
+            },
+            {
+              "id": "3de4f798-5b3c-4388-a7c8-f27595d922a9",
+              "name": "=1)News",
+              "value": "={{ $json.news_results[0].title }}",
+              "type": "string"
+            },
+            {
+              "id": "1688728a-0fd8-427f-9042-24d0765ca265",
+              "name": "1)link",
+              "value": "={{ $json.news_results[0].link }}",
+              "type": "string"
+            },
+            {
+              "id": "85144b9c-7172-4218-b032-fdeaa05829ea",
+              "name": "2)News",
+              "value": "={{ $json.news_results[1].title }}",
+              "type": "string"
+            },
+            {
+              "id": "90d0f7e9-b612-47fd-a63e-fcf246535878",
+              "name": "2)link",
+              "value": "={{ $json.news_results[1].link }}",
+              "type": "string"
+            },
+            {
+              "id": "e27e99cd-031c-4e99-8ec1-faa07a052d5c",
+              "name": "3)News",
+              "value": "={{ $json.news_results[2].title }}",
+              "type": "string"
+            },
+            {
+              "id": "a4d2c812-457f-4920-b245-75924239816e",
+              "name": "3)link",
+              "value": "={{ $json.news_results[2].link }}",
+              "type": "string"
+            },
+            {
+              "id": "87e2834b-2988-4740-95f8-bc8e1ca138ab",
+              "name": "4)News",
+              "value": "={{ $json.news_results[3].title }}",
+              "type": "string"
+            },
+            {
+              "id": "e9816c9d-0cc5-4247-a0c6-027f337abecc",
+              "name": "4)link",
+              "value": "={{ $json.news_results[3].link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        -140
+      ],
+      "id": "4c6983c0-c16e-4c0a-aafe-2a93e7a3f4ca",
+      "name": "Edit Fields2",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "instructions": "convert this into one item data type",
+        "codeGeneratedForPrompt": "convert this into one item data type",
+        "jsCode": "const items = $input.all();\nconst mergedItem = items.reduce((acc, item) => {\n  return { ...acc, ...item.json };\n}, {});\nreturn [mergedItem];\n"
+      },
+      "type": "n8n-nodes-base.aiTransform",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        -420
+      ],
+      "id": "5006e3b2-241a-40d7-ad65-b279739bb505",
+      "name": "AI Transform1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -560,
+        -180
+      ],
+      "id": "2c8b665a-7b3e-4ec7-9990-34fcad3b0acf",
+      "name": "Wait",
+      "webhookId": "432c093d-b3ae-4be5-a7a6-63ebd2c078e4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=arrange the data in user readable form without changing the content \n{{ $json.stringified }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -160,
+        -180
+      ],
+      "id": "8f2a1d1e-5bd1-4b37-80b3-1bfe91affc5b",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "instructions": "stringify the data\nusing return {{ { json: { stringified: JSON.stringify(item?.json) } } }}\n",
+        "codeGeneratedForPrompt": "stringify the data\nusing return {{ { json: { stringified: JSON.stringify(item?.json) } } }}\n",
+        "jsCode": "const items = $input.all();\nconst stringifiedItems = items.map((item) => {\n  return { json: { stringified: JSON.stringify(item?.json) } };\n});\nreturn stringifiedItems;\n"
+      },
+      "type": "n8n-nodes-base.aiTransform",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -180
+      ],
+      "id": "3a8574a0-f21a-421d-b4b1-9d70a0acc9e1",
+      "name": "AI Transform2"
+    }
+  ],
+  "pinData": {
+    "Replace Me1": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "connections": {
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord": {
+      "main": [
+        [
+          {
+            "node": "AI Transform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Transform": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Transform1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Transform1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "AI Transform2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Transform2": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7746863b-b626-4ba9-a9d6-5a9c83eb46f3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cb64b4bafa8716040f36dff782bd1a971609315d8f6f8b85220706f7e4a380f9"
+  },
+  "id": "5rjKLUMHpI26iaIS",
+  "tags": []
+}
